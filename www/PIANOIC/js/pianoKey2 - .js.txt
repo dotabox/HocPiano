@@ -1,0 +1,1617 @@
+﻿
+(function () {
+    CAAT.HighScoreContainer = function () {
+        CAAT.HighScoreContainer.superclass.constructor.call(this);
+        return this;
+    }
+
+    CAAT.HighScoreContainer.prototype = {
+        initialize: function (menuContainer) {
+			var self = this;
+            this.director = menuContainer.director;
+			this.global = this.director.globalVariables;
+			var global=this.global;
+			var LANGUAGE=global.LANGUAGE;
+			this.menuContainer = menuContainer;
+			var lang=LANG.highscore.difficulty;
+			this.difficultyText = [lang.easy[LANGUAGE],lang.hard[LANGUAGE],lang.insane[LANGUAGE]];
+			this.playButtonWidth = 100;
+			this.playButtonHeight = 40;
+			this.playButtonY = this.height - 110;
+			var director=this.director;
+			var difficultystle=PianoicStyle.highScoreContainer.child.difficulty;
+			var difficulty = new CAAT.Foundation.ActorContainer();
+			setPianoicStyle(director,difficulty,difficultystle);
+			this.addChild(difficulty);
+
+			var highScoreContainerbgColor=PianoicStyle.highScoreContainer.bgcolor;
+			var easy=new CAAT.Foundation.Actor();
+			setPianoicStyle(director,easy,difficultystle.easy);
+			var easybgcolor=difficultystle.easy.bgcolor;
+			easy.paint=function(director,time){
+				var ctx = director.ctx;
+				ctx.fillStyle=(global.DIFFICULTY==0)?highScoreContainerbgColor:easybgcolor;
+				ctx.fillRect(0,0,this.width,this.height);
+				ctx.fillStyle=difficulty.text.fillStyle;
+				ctx.font=difficulty.text.font;
+				var text=self.difficultyText[0];
+				var posX=this.width/2- ctx.measureText(text).width/2;
+				ctx.fillText(text,posX,this.height/2+ difficulty.text.textHeight/2);
+
+			}
+			easy.mouseDown=function(e){
+				global.DIFFICULTY=0;
+			}
+			var hard=new CAAT.Foundation.Actor();
+			setPianoicStyle(director,hard,difficultystle.hard);
+			var hardbgcolor=difficultystle.hard.bgcolor;
+			hard.paint=function(director,time){
+				var ctx = director.ctx;
+				ctx.fillStyle=(global.DIFFICULTY==1)?highScoreContainerbgColor:hardbgcolor;
+				ctx.fillRect(0,0,this.width,this.height);
+				ctx.fillStyle=difficulty.text.fillStyle;
+				ctx.font=difficulty.text.font;
+				var text=self.difficultyText[1];
+				var posX=this.width/2- ctx.measureText(text).width/2;
+				ctx.fillText(text,posX,this.height/2+ difficulty.text.textHeight/2);
+
+			}
+			hard.mouseDown=function(e){
+				global.DIFFICULTY=1;
+			}
+			var insane=new CAAT.Foundation.Actor();
+			setPianoicStyle(director,insane,difficultystle.insane);
+			var insanebgcolor=difficultystle.insane.bgcolor;
+			insane.paint=function(director,time){
+				var ctx = director.ctx;
+				ctx.fillStyle=(global.DIFFICULTY==2)?highScoreContainerbgColor:insanebgcolor;
+				ctx.fillRect(0,0,this.width,this.height);
+				ctx.fillStyle=difficulty.text.fillStyle;
+				ctx.font=difficulty.text.font;
+				var text=self.difficultyText[2];
+				var posX=this.width/2- ctx.measureText(text).width/2;
+				ctx.fillText(text,posX,this.height/2+ difficulty.text.textHeight/2);
+
+			}
+			insane.mouseDown=function(e){
+				global.DIFFICULTY=2;
+			}
+			difficulty.addChild(easy);
+			difficulty.addChild(hard);
+			difficulty.addChild(insane);
+			
+			var statsstyle=PianoicStyle.highScoreContainer.child.stats;
+			var stats = new CAAT.Foundation.ActorContainer();
+			var img_stats=setPianoicStyle(self.director,stats,statsstyle);
+			var iconstats=new CAAT.Foundation.Actor().setBackgroundImage(img_stats[0]);
+			stats.addChild(iconstats);
+			stats.paint=function(){
+				var ctx = director.ctx;
+				ctx.fillStyle=statsstyle.text.fillStyle;
+				ctx.font=statsstyle.text.font;
+				var score;
+				var pointData = global.pointData;
+				for (var i=0;i<pointData.length;i++)
+					if(pointData[i].id==musicList[global.SELECTING_RECORD].ID)
+						score = pointData[i].lv[global.DIFFICULTY]+"";
+				ctx.fillText(score,statsstyle.text.posX,statsstyle.text.posY);
+			}
+			this.addChild(stats);
+			var durationstyle=PianoicStyle.highScoreContainer.child.duration;
+			var duration = new CAAT.Foundation.ActorContainer();
+			var img_duration=setPianoicStyle(self.director,duration,durationstyle);
+			var iconduration=new CAAT.Foundation.Actor().setBackgroundImage(img_duration[0]);
+			duration.addChild(iconduration);			
+			this.addChild(duration);
+
+			var playstyle=PianoicStyle.highScoreContainer.child.play;
+			var play = new CAAT.Foundation.Actor();
+			setPianoicStyle(self.director,play,playstyle);
+			var text_play=LANG.highscore.play[LANGUAGE];
+			var playcolor=playstyle.bgcolor;
+			play.paint=function(){
+				var ctx = director.ctx;
+				ctx.fillStyle=playcolor;
+				ctx.fillRect(0,0,this.width,this.height);
+				ctx.fillStyle=playstyle.text.fillStyle;
+				ctx.font=playstyle.text.font;				
+				var posX=this.width/2- ctx.measureText(text_play).width/2;
+				ctx.fillText(text_play,posX,this.height/2+ playstyle.text.textHeight/2);
+			}
+			play.mouseDown=function(){
+				self.playButtonFunction();
+			}
+			play.mouseEnter=function(){
+				playcolor=playstyle.colorenter;
+			}
+			play.mouseExit=function(){
+				playcolor=playstyle.bgcolor;
+			}
+			this.addChild(play);
+            return this;
+        },
+        paint: function (director,time) {
+			CAAT.HighScoreContainer.superclass.paint.call(this, director, time);
+            var ctx = director.ctx;
+			
+			
+			
+			if(this.loading){
+				ctx.globalAlpha = 0.7;
+				ctx.fillStyle = "#000";
+				ctx.fillRect(-this.x,-this.y,director.width,director.height);
+				ctx.fillStyle = "#FFF";
+				var loadText = "LOADING.";
+				var dotNumber = ((time/500)<<0)%4;
+				for(var i=0;i<dotNumber;i++) loadText+="."
+				ctx.fillText(loadText,this.width/2-60,this.height-30);
+			}
+            return this;
+        },
+		closeBehavior: function(type){
+			var self = this;
+			var path= new CAAT.PathUtil.LinearPath().
+				setInitialPosition(this.x,this.y).
+				setFinalPosition(-this.width,0);
+			var pathBehavior= new CAAT.PathBehavior().setPath(path).setFrameTime(self.time,369).
+			addListener({
+				behaviorExpired: function(director,time){
+					self.emptyBehaviorList();
+				}
+			});
+			self.addBehavior(pathBehavior);
+			if(type==2){
+				this.global.JUST_LOAD_A_SONG = true;
+				//if(self.loaded) this.menuContainer.playButton.fn();
+			}
+		},		
+		playButtonFunction: function(){
+			var self = this;
+			var global = this.director.globalVariables;
+			if(self.menuContainer.inAnimation) return;
+			self.menuContainer.stopButton.fn();
+			self.loading = true;
+			self.menuContainer.playListContainer.loading = true;
+			self.enableEvents(false);
+			self.menuContainer.disable(false);
+			self.menuContainer.playListContainer.enableEvents(false);
+			var musicAllData = musicList[global.SELECTING_RECORD].Data;
+			var source = 	musicList[global.SELECTING_RECORD].Source;
+			var singleMusicData;
+			switch(global.DIFFICULTY){
+				case global.DIFFICULTY_EASY: singleMusicData = musicAllData.Easy; break;
+				case global.DIFFICULTY_HARD: singleMusicData = musicAllData.Hard; break;
+				case global.DIFFICULTY_INSANE: singleMusicData = musicAllData.Insane; break;
+			}
+			var audioLink;console.log(musicAllData.Hard)
+			if((!global.PLAY_FULL_FILE)&&(singleMusicData.Simple))audioLink = singleMusicData.Simple;
+			else audioLink = singleMusicData.Full;
+			var playms=function(){
+				self.director.currentScene.recordData=stringToRecordData(singleMusicData.fNodeData);
+				global.Sound.playMusic(audioLink,
+				function(){
+					self.loaded = global.Sound.loaded;
+					self.loading = false;
+					self.menuContainer.playListContainer.loading = false;
+					global.playingAudio = global.Sound.audioMusic;
+					self.menuContainer.closeBehavior(2);
+				},true);
+				
+				var musicName=musicList[global.SELECTING_RECORD].Name;
+				document.title ="Pianoic - "+musicName;
+				var EName=UnSign(musicName);
+				var arr_name=EName.split(" ");
+				var completeName="";
+				for (var x=0;x<arr_name.length;x++)
+					completeName+=arr_name[x];
+				location.hash="/"+1+"-"+musicList[global.SELECTING_RECORD].ID+"-"+global.DIFFICULTY+"/"+completeName;
+			}
+			if(!singleMusicData.loaded)
+			$.getScript(source+singleMusicData.NodeData, function(){
+					singleMusicData.loaded=true;
+					singleMusicData.fNodeData=LZString.decompressFromUTF16(datatemp);
+				playms();
+			});
+			else{
+				playms();
+			}
+			global.Sound.setVolume(global.SFX_VOLUME);
+		}
+		
+    }
+    function stringToRecordData(str){
+			var outputData = [];
+			if(str.length==0) return outputData;
+			var stringArray = str.split(",");
+			//console.log(stringArray.length);
+			for(var i=0;i<stringArray.length;i++){
+				var temp = stringArray[i].split(" ");
+				if(temp[0].charCodeAt(0)>57){
+					for(var j=0;j<keyData.length;j++){
+						if(temp[0] === keyData[j].name){
+							temp[0] = j;
+							break;
+						}
+					}
+				}
+				outputData.push({keyIndex:temp[0]<<0,time:temp[1]<<0});
+			}
+			return outputData;
+		}
+    extend(CAAT.HighScoreContainer, CAAT.Foundation.ActorContainer);
+
+})();
+
+(function () {
+    CAAT.PlayListContainer = function () {
+        CAAT.PlayListContainer.superclass.constructor.call(this);
+        return this;
+    }
+
+    CAAT.PlayListContainer.prototype = {
+        initialize: function (menuContainer,posX,posY,width,height) {
+			var self = this;
+            this.director = menuContainer.director;
+			this.menuContainer = menuContainer;
+
+			//this.setBounds(posX,posY,width,height);
+			this.playListMaxSong = 6;
+			
+
+			var offButtonstyle=PianoicStyle.playListContainer.child.offButtonPosition;
+			var offButtonPosition = new CAAT.Foundation.Actor();
+			var arr_offbutton=setPianoicStyle(self.director,offButtonPosition,offButtonstyle);
+			offButtonPosition.setBackgroundImage(arr_offbutton[0]);
+			offButtonPosition.mouseEnter = function(){
+				offButtonPosition.setBackgroundImage(arr_offbutton[1]);
+			}
+			offButtonPosition.mouseExit = function(){
+				offButtonPosition.setBackgroundImage(arr_offbutton[0]);
+			}
+			offButtonPosition.mouseDown = function(){				
+				menuContainer.closeBehavior(1);			
+			}
+			this.addChild(offButtonPosition);
+			this.offButtonPosition = offButtonPosition;
+
+			var headstyle=PianoicStyle.playListContainer.child.head;
+			var head = new CAAT.Foundation.ActorContainer();
+			setPianoicStyle(self.director,head,headstyle);
+			var iconsonglist = new CAAT.Foundation.Actor();
+			var iconauthor = new CAAT.Foundation.Actor();
+			setPianoicStyle(self.director,iconsonglist,headstyle.child.iconsonglist);
+			setPianoicStyle(self.director,iconauthor,headstyle.child.iconauthor);
+			head.addChild(iconsonglist);
+			head.addChild(iconauthor);
+			this.addChild(head);
+			this.head=head;
+			iconsonglist.cacheAsBitmap(iconsonglist.time,CAAT.Foundation.Actor.CACHE_DEEP);
+			iconauthor.cacheAsBitmap(iconauthor.time,CAAT.Foundation.Actor.CACHE_DEEP);
+			head.cacheAsBitmap(head.time,CAAT.Foundation.Actor.CACHE_DEEP);
+
+			var songliststyle=PianoicStyle.playListContainer.child.songlist;
+			var songlist={};
+			setPianoicStyle(self.director,songlist,songliststyle);
+			this.songlist=songlist;
+			this.textStartY=this.songlist.data.y;
+			this.textHeight	=this.songlist.data.textHeight;
+
+			var authorstyle=PianoicStyle.playListContainer.child.author;
+			var author={};
+			setPianoicStyle(self.director,author,authorstyle);
+			this.author=author;
+
+
+			
+			this.scrollPosition = 0;
+			this.global = this.director.globalVariables;
+			var mouseWheelEventFn = function(e){
+				var orientation = e.wheelDelta || -e.detail;
+				if(!self.scrollBar) return;
+				if(self.x<self.director.width){
+					var delta = (self.scroller.maxHeight/self.scroller.maxValue)<<0;
+					if(orientation>0){
+						if(self.scroller.y>=delta)self.scroller.y-=delta;
+						else self.scroller.y = 0;
+					}
+					else{
+						if(self.scroller.y<=self.scroller.maxHeight-delta) self.scroller.y+=delta;
+						else self.scroller.y = self.scroller.maxHeight;
+					}
+				}
+			}
+			
+			window.onmousewheel = mouseWheelEventFn;
+			document.addEventListener("DOMMouseScroll", mouseWheelEventFn);
+			
+			if(musicList.length>this.playListMaxSong){
+				this.scrollBar = new CAAT.ActorContainer().
+									setBounds(this.width-20,this.textStartY - this.textHeight*2/3,
+											20,this.textHeight*this.playListMaxSong );
+									//setFillStyle("#CCC");
+				this.scroller = new CAAT.ActorContainer().
+									setBounds(0,this.scrollBar.width/2 - 5,
+											10,this.scrollBar.height/(musicList.length-this.playListMaxSong+1)).
+									setFillStyle("#333").
+									enableEvents(false).
+									setAlpha(0.5);
+				this.scrollBar.addChild(this.scroller);
+				this.addChild(this.scrollBar);
+				this.scroller.maxHeight = this.scrollBar.height-this.scroller.height;
+				this.scroller.maxValue = musicList.length-this.playListMaxSong+1;
+				this.scrollBar.mouseDown = function(e){
+					if((e.y>self.scroller.y)&&(e.y<self.scroller.y+self.scroller.height)) {
+						self.lastMouseY = e.y;
+						self.dragging = true;
+					}
+				}
+				this.scrollBar.mouseDrag = function(e){
+					if(self.dragging){
+						var nextY = self.scroller.y + e.y - self.lastMouseY;
+						self.lastMouseY = e.y;
+						if((nextY>=0)&&(nextY<=self.scrollBar.height - self.scroller.height)){
+							self.scroller.y = nextY;
+						}
+					}
+				}
+				this.scrollBar.mouseUp = function(e){
+					if(self.dragging) self.dragging = false;
+				}
+			}
+            return this;
+        },
+        paint: function (director,time) {
+			CAAT.PlayListContainer.superclass.paint.call(this, director, time);
+            var ctx = director.ctx;
+			
+			
+			
+			// var headX = this.x;
+			// var headY = this.y;
+			// var textPosY = headY+10;
+			//var text = "SONG LIST";
+			//ctx.fillText(text,this.width/2 - ctx.measureText(text).width/2,textPosY);
+			var songlistdata=this.songlist.data;
+			var authordata=this.author.data;
+			var textStartY = songlistdata.y;
+			var textHeight = songlistdata.textHeight;
+			
+			//ctx.strokeStyle = "#FFF";
+			ctx.globalAlpha = this.songlist.text.selectAlpha||0.5;
+			ctx.fillStyle = this.songlist.text.selectFill||"#ECC";
+			
+			
+			
+			if(this.scrollBar) 	{
+				var scrollPercent =  (100*(this.scroller.y/(this.scrollBar.height-this.scroller.height)))<<0;
+				var percent = (scrollPercent==100)?scrollPercent-1:scrollPercent;
+				this.scrollPosition = (this.scroller.maxValue*percent/100)<<0;
+			}
+			else this.scrollPosition = 0;
+			var scrollPosition = this.scrollPosition;
+			var global = this.global;
+			if((global.SELECTING_RECORD-scrollPosition>=0)&&(global.SELECTING_RECORD-scrollPosition<this.playListMaxSong))
+			ctx.fillRect(0,textStartY+textHeight*(global.SELECTING_RECORD-scrollPosition) - textHeight*2/3,this.width,textHeight);
+			ctx.globalAlpha = 1;
+			for(var i=scrollPosition;i<musicList.length;i++){
+				if(i>=scrollPosition+this.playListMaxSong) break;
+				ctx.fillStyle = songlistdata.fillStyle;
+				//ctx.strokeStyle = (i==global.SELECTING_RECORD)?"#000":"#FFF";
+				ctx.font = this.songlist.text.font||"22px UTM Avo";
+				//this.drawCircle(ctx,headX,textStartY+(i-scrollPosition)*textHeight - textHeight/6,this.circleRadius);
+				var textPosY = textStartY+(i-scrollPosition)*textHeight;
+				ctx.fillText(musicList[i].Name,songlistdata.x,textPosY-10);
+				ctx.font = this.author.text.font||"22px UTM Avo";
+				ctx.fillText(musicList[i].Author,authordata.x,textPosY+10);
+				
+				
+			}
+            return this;
+        },			
+		closeBehavior: function(type){
+			var self = this;
+			var path= new CAAT.PathUtil.LinearPath().
+				setInitialPosition(this.x,this.y).
+				setFinalPosition(this.director.width,0);
+			self.menuContainer.inAnimation = true;
+			var pathBehavior= new CAAT.PathBehavior().setPath(path).setFrameTime(self.time,369).
+			addListener({
+				behaviorExpired: function(director,time){
+					self.emptyBehaviorList();
+					self.menuContainer.inAnimation = false;
+				}
+			});
+			self.addBehavior(pathBehavior);
+			if(type == 1){
+				this.global.SELECTING_RECORD = this.currentRecord;
+				this.global.DIFFICULTY = this.currentDifficulty;
+			}
+		},
+		mouseDown: function(e){
+			var self = this;
+			if(self.menuContainer.inAnimation) return;
+			
+			var startY = this.textStartY - this.textHeight*2/3;
+			for(var i=0;i<this.playListMaxSong;i++){
+				if((e.y>startY+i*this.textHeight)&&(e.y<startY+(i+1)*this.textHeight)){
+					this.global.SELECTING_RECORD = i+self.scrollPosition;
+					break;
+				}
+			}
+		},
+		mouseDblClick: function(e){
+			var self = this;
+			if(self.menuContainer.inAnimation) return;
+			var startY = this.textStartY - this.textHeight*2/3;
+			var posY=e.y-this.y;
+			for(var i=0;i<this.playListMaxSong;i++){
+				if((posY>startY+i*this.textHeight)&&(posY<startY+(i+1)*this.textHeight)){
+					this.global.SELECTING_RECORD = i+self.scrollPosition;
+					self.menuContainer.highScoreContainer.playButtonFunction();
+					break;
+				}
+			}
+		}
+		
+    }
+    extend(CAAT.PlayListContainer, CAAT.Foundation.ActorContainer);
+})();
+
+(function () {
+    CAAT.SettingContainer = function () {
+        CAAT.SettingContainer.superclass.constructor.call(this);
+        return this;
+    }
+
+    CAAT.SettingContainer.prototype = {
+        initialize: function (menuContainer) {
+			var self = this;
+            this.director = menuContainer.director;
+			this.menuContainer = menuContainer;
+			var global=this.director.globalVariables;
+			//this.offButtonPosition = {x:self.director.width - 70 ,y:40};
+			var offButtonstyle=PianoicStyle.settingContainer.child.offButtonPosition;
+			var offButtonPosition = new CAAT.Foundation.Actor();
+			var arr_offbutton=setPianoicStyle(self.director,offButtonPosition,offButtonstyle);
+			offButtonPosition.setBackgroundImage(arr_offbutton[0]);
+			offButtonPosition.mouseEnter = function(){
+				offButtonPosition.setBackgroundImage(arr_offbutton[1]);
+			}
+			offButtonPosition.mouseExit = function(){
+				offButtonPosition.setBackgroundImage(arr_offbutton[0]);
+			}
+			offButtonPosition.mouseDown = function(){				
+				menuContainer.closeBehavior(-1);			
+			}
+			this.addChild(offButtonPosition);
+			this.offButtonPosition = offButtonPosition;
+
+
+			//General Settings
+			var settingList = [
+				LANG.setting.autoplay,
+				LANG.setting.playfile,
+				LANG.setting.playfullfile,
+				LANG.setting.autopause,
+				LANG.setting.keyboardText,
+				LANG.setting.playbackText
+			];
+			var checkList=[];
+			for (var i=0;i<settingList.length;i++){
+				var radioCheckstyle=PianoicStyle.settingContainer.child.radiocheck;			
+				var radioCheck = new CAAT.RadioCheck();
+				var arr_radiocheck=setPianoicStyle(self.director,radioCheck,radioCheckstyle);
+				radioCheck.setVisible(false).setLocation(radioCheckstyle.posX,radioCheckstyle.textHeight*i+radioCheckstyle.posY);
+				this.addChild(radioCheck);
+				checkList.push(radioCheck);
+			}
+
+			checkList[0].initialize(self.director,arr_radiocheck[0],arr_radiocheck[1],global.AUTOPLAY,function(){
+				global.AUTOPLAY=!global.AUTOPLAY;
+			});
+			checkList[1].initialize(self.director,arr_radiocheck[0],arr_radiocheck[1],global.ENABLE_PLAY_FILE,function(){
+				global.ENABLE_PLAY_FILE=!global.ENABLE_PLAY_FILE;
+			});
+			checkList[2].initialize(self.director,arr_radiocheck[0],arr_radiocheck[1],global.PLAY_FULL_FILE,function(){
+				global.PLAY_FULL_FILE=!global.PLAY_FULL_FILE;
+			});
+			checkList[3].initialize(self.director,arr_radiocheck[0],arr_radiocheck[1],global.AUTO_PAUSE,function(){
+				global.AUTO_PAUSE=!global.AUTO_PAUSE;
+			});
+			checkList[4].initialize(self.director,arr_radiocheck[0],arr_radiocheck[1],global.SHOW_KEYBOARD_TEXT,function(){
+				global.SHOW_KEYBOARD_TEXT=!global.SHOW_KEYBOARD_TEXT;
+			});
+			checkList[5].initialize(self.director,arr_radiocheck[0],arr_radiocheck[1],global.SHOW_PLAYBACK_TEXT,function(){
+				global.SHOW_PLAYBACK_TEXT=!global.SHOW_PLAYBACK_TEXT;
+			});
+				
+				
+			
+			this.checkList=checkList;
+				
+			this.settingList = settingList;
+			
+			this.settingFont = "bold 22px UTM Avo";
+			this.calculateText();
+			this.buttonStartX = 80;
+			this.buttonStartY = 140;
+			this.lineHeight = 40;
+			this.lineSpace = 10;
+
+            return this;
+        },
+		calculateText: function(){
+			this.settingFont = "bold 22px UTM Avo";
+			var settingTextWidth = [];
+			this.director.ctx.font = this.settingFont;
+			for(var i=0;i<this.settingList.length;i++){
+				settingTextWidth.push(this.director.ctx.measureText(this.settingList[i][this.director.globalVariables.LANGUAGE]).width);
+			}
+			
+			this.settingTextWidth = settingTextWidth;
+		},
+        paint: function (director,time) {
+			CAAT.SettingContainer.superclass.paint.call(this, director, time);
+
+			var settingstyle=PianoicStyle.settingContainer;
+			var global = this.director.globalVariables;
+			var ctx = director.ctx;
+			ctx.fillStyle = settingstyle.bgcolor;
+			ctx.fillRect(0,0,this.width,this.height);
+			switch (global.selectSetting){
+				case 0:
+					if(!this.checkList[0].visible)
+					for (var i=0;i<this.checkList.length;i++){
+						this.checkList[i].setVisible(true);
+					};
+					// ctx.globalAlpha=settingstyle.general.selectAlpha;
+					// ctx.fillStyle=settingstyle.general.selectFill;
+					// ctx.fillRect(0,posY,this.width,settingstyle.general.textHeight);
+					// ctx.globalAlpha=1;
+					ctx.fillStyle = settingstyle.child.general.fillStyle;
+					ctx.font = settingstyle.child.general.font;
+					for (var i=0;i<this.checkList.length;i++){
+						var text=this.settingList[i][global.LANGUAGE];
+						//var posY=settingstyle.child.general.posY*i+settingstyle.child.general.textHeight*2/3;
+						var posY=this.checkList[i].y+settingstyle.child.general.textHeight*2/3;
+						ctx.fillText(text,this.checkList[i].x+settingstyle.child.general.posX,posY);
+					};					
+					
+					break;
+				case 1:
+					if(this.checkList[0].visible)
+					for (var i=0;i<this.checkList.length;i++){
+						this.checkList[i].setVisible(false);
+					}
+					break;
+				case 2:
+					if(this.checkList[0].visible)
+					for (var i=0;i<this.checkList.length;i++){
+						this.checkList[i].setVisible(false);
+					}
+					break;
+				case 3:
+					if(this.checkList[0].visible)
+					for (var i=0;i<this.checkList.length;i++){
+						this.checkList[i].setVisible(false);
+					}
+					break;
+			}
+			// ctx.strokeStyle = "#FFF";
+			// ctx.font = "bold 30px UTM Avo";
+			// var global = this.director.globalVariables;
+			// var settingText = LANG.setting.texts[global.LANGUAGE];
+			// ctx.fillText(settingText,this.width/2 - ctx.measureText(settingText).width/2,60);
+			
+			// ctx.font = this.settingFont;
+			
+			// var startX = this.buttonStartX ,startY = this.buttonStartY;
+			// var startTextX = startX + 30,startTextY = startY + 20;
+			// var textHeight = this.lineHeight + this.lineSpace;
+			// var settingList = this.settingList;
+			// for(i=0;i<settingList.length;i++){
+			// 	var text = settingList[i][global.LANGUAGE];
+			// 	ctx.fillText(text,startTextX,startTextY + i*textHeight);
+			// 	ctx.strokeRect(startX,startY+i*textHeight,20,20);
+			// }
+			// var languageTextE = LANG.setting.languageE[global.LANGUAGE];
+			// this.languageTextWidthE = ctx.measureText(languageTextE).width;
+			// var languageTextV = LANG.setting.languageV[global.LANGUAGE];
+			// this.languageTextWidthV = ctx.measureText(languageTextV).width;
+			// ctx.fillText(languageTextE,startTextX,startTextY + settingList.length*textHeight);
+			// ctx.strokeRect(startX,startY+settingList.length*textHeight,20,20);
+			// var space = (startTextX-startX)*2+this.languageTextWidthE;
+			// ctx.fillText(languageTextV,startTextX+space,startTextY + settingList.length*textHeight);
+			// ctx.strokeRect(startX+ space,startY+settingList.length*textHeight,20,20);
+			// var tickIcon = director.getImage("tickIcon");
+			// var iconPosX = startX-5;
+			// var iconPosY = startY-10;
+			// iconSize = 30;
+			// if(global.AUTOPLAY) ctx.drawImage(tickIcon,iconPosX,iconPosY,iconSize,iconSize);
+			// if(global.ENABLE_PLAY_FILE) ctx.drawImage(tickIcon,iconPosX,iconPosY+textHeight,iconSize,iconSize);
+			// if(global.PLAY_FULL_FILE) ctx.drawImage(tickIcon,iconPosX,iconPosY+textHeight*2,iconSize,iconSize);
+			// if(global.AUTO_PAUSE) ctx.drawImage(tickIcon,iconPosX,iconPosY+textHeight*3,iconSize,iconSize);
+			// if(global.SHOW_KEYBOARD_TEXT) ctx.drawImage(tickIcon,iconPosX,iconPosY+textHeight*4,iconSize,iconSize);
+			// if(global.SHOW_PLAYBACK_TEXT) ctx.drawImage(tickIcon,iconPosX,iconPosY+textHeight*5,iconSize,iconSize);
+			// ctx.drawImage(tickIcon,iconPosX + ((global.LANGUAGE==1)?space:0) ,iconPosY+textHeight*6,iconSize,iconSize);
+            return this;
+        },
+		mouseDown: function(e){
+			var self = this;
+			var global = this.director.globalVariables;
+			
+			for(var i=0;i<this.settingList.length;i++){
+				if((e.x>=this.buttonStartX)&&
+				(e.x<=this.buttonStartX+30+this.settingTextWidth[i])&&
+				(e.y>=this.buttonStartY+i*(this.lineHeight+this.lineSpace))&&
+				(e.y<=this.buttonStartY+i*(this.lineHeight+this.lineSpace)+this.lineHeight)){
+					switch(i){
+						case 0:
+							self.menuContainer.toggleAutoplay();
+							break;
+						case 1:
+							self.menuContainer.toggleEnablePlayFile();
+							break;
+						case 2:
+							global.PLAY_FULL_FILE = !global.PLAY_FULL_FILE;
+							break;
+						case 3:
+							global.AUTO_PAUSE = !global.AUTO_PAUSE;
+							break;
+						case 4:
+							global.SHOW_KEYBOARD_TEXT = !global.SHOW_KEYBOARD_TEXT;
+							if(this.menuContainer.repaintKeyboard){
+								this.menuContainer.repaintKeyboard();
+							}
+							break;
+						case 5:
+							global.SHOW_PLAYBACK_TEXT = !global.SHOW_PLAYBACK_TEXT;
+							break;
+					}
+				}
+			}
+			if((e.y>=this.buttonStartY+this.settingList.length*(this.lineHeight+this.lineSpace))&&
+			(e.y<=this.buttonStartY+this.settingList.length*(this.lineHeight+this.lineSpace)+this.lineHeight)){
+				if((e.x>=this.buttonStartX)&&(e.x<=this.buttonStartX+30+this.languageTextWidthE)){
+					global.LANGUAGE = 0;
+					this.calculateText();
+				}
+				else if((e.x>=this.buttonStartX+60+this.languageTextWidthE)&&
+				(e.x<=this.buttonStartX+90+this.languageTextWidthE+this.languageTextWidthV)){
+					global.LANGUAGE = 1;
+					this.calculateText();
+				}
+			}
+		},
+		drawCircle: function(ctx,centerX,centerY,radius){
+			ctx.save();
+			ctx.beginPath()
+			ctx.arc(centerX,centerY,radius,0,2*Math.PI);
+			ctx.closePath();
+			ctx.stroke();
+			ctx.restore();
+		},
+		checkMouseInCircle: function(ex,ey,centerX,centerY,radius){
+			if(Math.pow(centerX-ex,2)+Math.pow(centerY-ey,2)<Math.pow(radius,2)) return true;
+			return false;
+		},
+		closeBehavior: function(){
+			var self = this;
+			var path= new CAAT.PathUtil.LinearPath().
+				setInitialPosition(this.x,this.y).
+				setFinalPosition(this.director.width,0);
+			self.menuContainer.inAnimation = true;
+			var pathBehavior= new CAAT.PathBehavior().setPath(path).setFrameTime(self.time,369).
+			addListener({
+				behaviorExpired: function(director,time){
+					self.emptyBehaviorList();
+					self.menuContainer.inAnimation = false;
+				}
+			});
+			self.addBehavior(pathBehavior);
+		}
+    }
+    extend(CAAT.SettingContainer, CAAT.Foundation.ActorContainer);
+})();
+
+(function () {
+    CAAT.ChooseSetting = function () {
+        CAAT.ChooseSetting.superclass.constructor.call(this);
+        return this;
+    }
+
+    CAAT.ChooseSetting.prototype = {
+        initialize: function (menuContainer) {
+			var self = this;
+            this.director = menuContainer.director;
+			this.global = this.director.globalVariables;
+
+			
+            return this;
+        },
+        paint: function (director,time) {
+			CAAT.HighScoreContainer.superclass.paint.call(this, director, time);
+            var ctx = director.ctx;
+			var chooseSettingstyle=PianoicStyle.chooseSetting;
+			var ctx = director.ctx;
+			ctx.fillStyle = chooseSettingstyle.bgcolor;
+			ctx.fillRect(0,0,this.width,this.height);
+			var selectText=this.global.selectSetting;
+			var posY=selectText*chooseSettingstyle.text.textHeight;
+			ctx.globalAlpha=chooseSettingstyle.text.selectAlpha;
+			ctx.fillStyle=chooseSettingstyle.text.selectFill;
+			ctx.fillRect(0,posY,this.width,chooseSettingstyle.text.textHeight);
+			ctx.globalAlpha=1;
+			ctx.fillStyle = chooseSettingstyle.text.fillStyle;
+			ctx.font = chooseSettingstyle.text.font;
+			ctx.fillText("General Settings",chooseSettingstyle.text.posX,chooseSettingstyle.text.textHeight*0+chooseSettingstyle.text.textHeight*2/3);
+			ctx.fillText("Keyboard Settings",chooseSettingstyle.text.posX,chooseSettingstyle.text.textHeight*1+chooseSettingstyle.text.textHeight*2/3);
+			ctx.fillText("Record Settings",chooseSettingstyle.text.posX,chooseSettingstyle.text.textHeight*2+chooseSettingstyle.text.textHeight*2/3);
+			ctx.fillText("Social play Settings",chooseSettingstyle.text.posX,chooseSettingstyle.text.textHeight*3+chooseSettingstyle.text.textHeight*2/3);
+			
+			
+            return this;
+        },
+		closeBehavior: function(){
+			var self = this;
+			var path= new CAAT.PathUtil.LinearPath().
+				setInitialPosition(this.x,this.y).
+				setFinalPosition(-this.width,0);
+			var pathBehavior= new CAAT.PathBehavior().setPath(path).setFrameTime(self.time,369).
+			addListener({
+				behaviorExpired: function(director,time){
+					self.emptyBehaviorList();
+				}
+			});
+			self.addBehavior(pathBehavior);
+		}
+		
+    }
+    extend(CAAT.ChooseSetting, CAAT.Foundation.ActorContainer);
+
+})();
+(function () {
+    CAAT.MenuContainer = function () {
+        CAAT.MenuContainer.superclass.constructor.call(this);
+        return this;
+    }
+
+    CAAT.MenuContainer.prototype = {
+        initialize: function (director,playList) {
+			var self = this;
+            this.director = director;
+            var main={};
+			var global = director.globalVariables;
+			this.currentScene = director.currentScene;
+			this.hoverButton = -1;
+			this.playList = playList;
+			this.listNumber = playList.length;
+			this.nameList = [];
+			this.audioIdList = [];
+			for(var i =0;i<playList.length;i++){
+				this.nameList.push(playList[i].name);
+				this.audioIdList.push(playList[i].audio);
+			}
+			//this.setFillStyle("#8d1f1f");
+			this.marginLeft = 5;
+			this.lineHeight = 20;
+			this.inAnimation = false;
+			var buttonSize=40;
+			var buttonLocation=[{x:0,y:0},{x:buttonSize,y:0},{x:buttonSize*2,y:0}];
+			 
+			// LOGO PIANOIC
+			var bglogostyle= PianoicStyle.menuContainer.child.bglogoActor;
+			var bglogoActor = new CAAT.Foundation.Actor();
+			setPianoicStyle(director,bglogoActor,bglogostyle);
+			this.addChild(bglogoActor);			
+			main.bglogoActor=bglogoActor;
+			bglogoActor.cacheAsBitmap(this.time,CAAT.Foundation.Actor.CACHE_DEEP);
+			
+			var pianoiclogostyle= PianoicStyle.menuContainer.child.pianoiclogoActor;
+			var pianoiclogoActor = new CAAT.Foundation.Actor();
+			setPianoicStyle(director,pianoiclogoActor,pianoiclogostyle);
+			this.addChild(pianoiclogoActor);
+			main.pianoiclogoActor=pianoiclogoActor;
+			pianoiclogoActor.cacheAsBitmap(this.time,CAAT.Foundation.Actor.CACHE_DEEP);
+			/*bglogostyle.bgcolor?bglogoActor.setFillStyle(bglogostyle.bgcolor):null;
+			bglogostyle.image?bglogoActor.setBackgroundImage(new CAAT.SpriteImage().initialize(director.getImage(bglogostyle.image[0]),bglogostyle.image[1],bglogostyle.image[2])):null;							
+			bglogostyle.size?bglogoActor.setBounds(bglogostyle.size.x,bglogostyle.size.y,bglogostyle.size.width,bglogostyle.size.height)
+							:null;*/
+
+			//var bglogostyle= PianoicStyle.menuContainer.child.bglogo;
+			//var pianoiclogoImage =  new CAAT.SpriteImage().initialize(director.getImage("pianoic-logo"),1,1);
+			//var logoheight=pianoiclogoImage.height;
+			//var logowidth=pianoiclogoImage.width;
+			//var posIconY=19;
+			//console.log(pianoiclogoImage.width,pianoiclogoImage.height)
+			
+			// var pianoiclogoActor = new CAAT.Foundation.ActorContainer().
+			// 				setBounds(20,posIconY,logowidth,logoheight).
+			// 				setBackgroundImage(pianoiclogoImage);
+			
+			
+
+			
+
+			//BUTTON MUSIC
+
+			var btmsLocation = [273+32,273+126,273+215,273+306]
+			var btmswidth=292;
+
+			//Record
+			var recordstyle= PianoicStyle.menuContainer.child.recordButton;
+			var recordButton = new CAAT.Button();
+			var arr_buttonImage=setPianoicStyle(director,recordButton,recordstyle);
+			var recordImage =arr_buttonImage[0];
+			var activerecordImage =arr_buttonImage[1];				
+			recordButton.initialize(director,recordImage,0,1,2,0,
+			function(){
+				//self.volumeBar.setVisible(!self.volumeBar.visible);
+			});
+			this.recordButton=recordButton;
+			this.addChild(recordButton);
+			main.recordButton=recordButton;
+
+			//Play
+			var playstyle= PianoicStyle.menuContainer.child.playButton;
+			var playButton = new CAAT.Button();
+			var arr_buttonImage=setPianoicStyle(director,playButton,playstyle);
+			var playImage =arr_buttonImage[0];
+			var pauseImage =arr_buttonImage[1];			
+			playButton.initialize(director,playImage,0,1,2,0,function(){
+
+				if (playButton._isDown) playButton._isDown();
+				global.JUST_LOAD_A_SONG = false;
+				//global.playingAudio.currentTime=40;
+				if(global.RECORDING||global.countingDown) return;
+				if(!global.PLAYING_RECORD){
+					global.countingDown = true;
+					global.startCountdownTime = self.time;
+					var musicAllData = musicList[global.SELECTING_RECORD].Data;
+					var source = 	musicList[global.SELECTING_RECORD].Source;
+					var singleMusicData;
+					switch(global.DIFFICULTY){
+						case global.DIFFICULTY_EASY: singleMusicData = musicAllData.Easy; break;
+						case global.DIFFICULTY_HARD: singleMusicData = musicAllData.Hard; break;
+						case global.DIFFICULTY_INSANE: singleMusicData = musicAllData.Insane; break;
+					}
+					var playms=function(){
+						if(self.currentScene.playFunction) self.currentScene.playFunction();
+						global.PAUSING_RECORD = true;
+						if(global.PLAY_FILE) global.playingAudio.pause();
+					}
+					if(!singleMusicData.loaded)
+					$.getScript(source+singleMusicData.NodeData, function(){
+							singleMusicData.loaded=true;
+							singleMusicData.fNodeData=LZString.decompressFromUTF16(datatemp);
+						playms();
+					});
+					else{
+						playms();
+					}
+					
+				}
+				else {
+					if(!global.PAUSING_RECORD){
+						global.PAUSING_RECORD = true;
+						playButton.setBackgroundImage(playImage,true);
+						if(global.PLAY_FILE) global.playingAudio.pause();
+					}
+					else{
+						global.PAUSING_RECORD = false;
+						if(global.PLAY_FILE) global.playingAudio.play();
+						playButton.setBackgroundImage(pauseImage,true);
+					}
+				}
+
+			});
+			playButton.setPauseImage=function(){
+				playButton.setBackgroundImage(pauseImage,true);
+			}
+			playButton.setPlayImage=function(){
+				playButton.setBackgroundImage(playImage,true);
+			}
+			self.playButton = playButton;
+			self.addChild(playButton);
+			main.playButton=playButton;
+
+			//Sự kiện khi chuyển tab
+			var eventPause=function(on){
+				if (on&&global.PLAYING_RECORD&&!global.PAUSING_RECORD)
+			  		{
+			  		self.playButton.fn();
+				global.JUST_LOAD_A_SONG=true;
+			  	}
+			};
+			window.onblur = function () {
+				eventPause(global.AUTO_PAUSE);
+			};
+
+			//STOP
+			var stopstyle= PianoicStyle.menuContainer.child.stopButton;
+			var stopButton = new CAAT.Button();
+			var arr_buttonImage=setPianoicStyle(director,stopButton,stopstyle);
+			var stopImage =arr_buttonImage[0];
+			stopButton.initialize(director,stopImage,0,1,2,0,function(){
+				if(global.RECORDING) return;
+				if (global.cancel()) return;
+				global.JUST_LOAD_A_SONG = false;
+				if (stopButton._isDown) stopButton._isDown();
+				if(global.PLAYING_RECORD) {
+					currentRecordIndex = 0;
+					playButton.setBackgroundImage(playImage,true);
+					global.PLAYING_RECORD = false;
+					global.PAUSING_RECORD = false;
+					if(global.PLAY_FILE){
+						global.playingAudio.pause();
+						global.playingAudio.currentTime = 0;
+					}
+					global.pausedStart = 0;
+				}
+			});
+			self.stopButton = stopButton;
+			self.addChild(stopButton);
+			main.stopButton=stopButton;
+
+			//VOLUME
+			var volumestyle= PianoicStyle.menuContainer.child.volumeButton;
+			var volumeButton = new CAAT.Button();
+			var arr_buttonImage=setPianoicStyle(director,volumeButton,volumestyle);
+			var volumeImage =arr_buttonImage[0];
+			var activevolumeImage =arr_buttonImage[1];
+			volumeButton.initialize(director,volumeImage,0,1,2,0,
+			function(){
+				if (self.volumeBar.visible) volumeButton.setBackgroundImage(volumeImage);
+				else volumeButton.setBackgroundImage(activevolumeImage);
+				self.volumeBar.setVisible(!self.volumeBar.visible);
+			});
+			this.volumeButton = volumeButton;
+			this.addChild(volumeButton);
+			main.volumeButton=volumeButton;
+
+			//INFO SONG BAR		
+			
+			var bginfosong= PianoicStyle.menuContainer.child.bginfosongActor;
+			var bginfosongActor = new CAAT.Foundation.Actor();
+			setPianoicStyle(director,bginfosongActor,bginfosong);
+			this.addChild(bginfosongActor);
+			main.bginfosongActor=bginfosongActor;
+			bginfosongActor.cacheAsBitmap(this.time,CAAT.Foundation.Actor.CACHE_DEEP);
+
+			/*var infosongstyle= PianoicStyle.menuContainer.child.infosongActor;
+			var infosongActor = new CAAT.Foundation.Actor();
+			setPianoicStyle(director,infosongActor,infosongstyle);
+			this.addChild(infosongActor);			
+			infosongActor.cacheAsBitmap(this.time,CAAT.Foundation.Actor.CACHE_DEEP);*/
+
+			//CREATE SHEET
+			var sheetstyle= PianoicStyle.menuContainer.child.sheetButton;
+			var sheetButton = new CAAT.Button();
+			var arr_buttonImage=setPianoicStyle(director,sheetButton,sheetstyle);
+			var sheetImage =arr_buttonImage[0];
+			sheetButton.initialize(director,sheetImage,0,1,2,0,function(){
+				var speed=0.5;	
+				var musicAllData = musicList[global.SELECTING_RECORD].Data;
+				var singleMusicData;
+				switch(global.DIFFICULTY){
+					case global.DIFFICULTY_EASY: singleMusicData = musicAllData.Easy; break;
+					case global.DIFFICULTY_HARD: singleMusicData = musicAllData.Hard; break;
+					case global.DIFFICULTY_INSANE: singleMusicData = musicAllData.Insane; break;
+				}
+				var recordData=stringToRecordData(singleMusicData.fNodeData);
+				var record="";//console.log(recordData)
+				var length=recordData.length;
+				var len1=length-1;
+				for (var i=0;i<length;i++){
+					var currentKey = keyData[recordData[i].keyIndex];
+					var key="";
+
+					
+					if ( currentKey.keyCode[0] >= 96 && currentKey.keyCode[0] <= 105){
+						key='<span style="color:red">'+String.fromCharCode(currentKey.keyCode[0]-48)+'</span>';
+					} else
+					{
+						if (currentKey.keyCode[0] >= 48 && currentKey.keyCode[0] <= 90) {
+						if (!currentKey.isShift[0])
+							key=String.fromCharCode(currentKey.keyCode[0]).toLowerCase();
+						else
+							key=String.fromCharCode(currentKey.keyCode[0]);
+						}else {
+							switch(currentKey.keyCode[0]){
+								case 13: if (currentKey.location[0]==0) 
+											key='En'; 
+										else key='<span style="color:red">'+"En"+'</span>';
+										break;
+								case 106:key='<span style="color:red">'+"*"+'</span>';break;
+								case 107:key='<span style="color:red">'+"+"+'</span>';break;
+								case 109:key='<span style="color:red">'+"-"+'</span>';break;
+								case 110:key='<span style="color:red">'+"D"+'</span>';break;
+								case 111:key='<span style="color:red">'+"En"+'</span>';break;
+							}
+						}
+					}
+					var time=recordData[i].time;
+					if (i!=len1)
+						if (time==recordData[i+1].time){
+							if (recordData[i].keyIndex!=recordData[i+1].keyIndex)
+							record+=key;
+						}					
+						else if (recordData[i+1].time-time>1000*speed)
+							record +=key +"</br>";
+						else
+							record+=key+" ";
+				}
+				$('#basic-modal-content').modal({autoResize :true,appendTo:'#frame',overlayClose :true,focus:false,onShow:function(){sheetButton._show=true},_onClose:function(){sheetButton._show=false},fixed:false});
+			 	document.getElementById('basic-modal-content').innerHTML='<h3 id="popupsheet"></h3>\n<p id="copysheet">Examples:</p>\n<p><code id="code"></code></p>';
+			 	document.getElementById('popupsheet').innerHTML=LANG.popup.popupsheet[global.LANGUAGE];
+			 	document.getElementById('copysheet').innerHTML=LANG.popup.copysheet[global.LANGUAGE];		 	
+			 	document.getElementById('code').innerHTML=record;
+			 	//document.getElementById('share').innerHTML=" "+LANG.popup.share[global.LANGUAGE];
+			 	document.getElementById('code').onmousedown=function(){selectText('code')}
+			 	selectText('code');
+			 	eventPause(true);
+			});
+			self.sheetButton = sheetButton;
+			self.addChild(sheetButton);
+			main.sheetButton=sheetButton;
+
+			//PLAYLIST
+			var playListstyle= PianoicStyle.menuContainer.child.playListButton;
+			var playListButton = new CAAT.Button();
+			var arr_buttonImage=setPianoicStyle(director,playListButton,playListstyle);
+			var playListImage =arr_buttonImage[0];
+			/*var deltaButton = this.width/2 - playListImage.singleHeight/2;
+			this.deltaButton = deltaButton;*/
+			var firstplaylist=false;
+			playListButton.initialize(director,playListImage,0,1,2,0,
+			function(e){
+				global.JUST_LOAD_A_SONG = false;
+				if(self.inAnimation) return;
+				if (global.cancel()) return;
+				if(global.PLAYING_RECORD&&(!global.PAUSING_RECORD)) self.playButton.fn();
+				else if(global.countingDown)self.stopButton.fn();
+				self.inAnimation = true;
+				var playListstyle=PianoicStyle.playListContainer;
+				var playListPosX = playListstyle.bound.x;
+				var playListPosY = playListstyle.bound.y;
+				var playListWidth = playListstyle.bound.width;
+				var highScorestyle=PianoicStyle.highScoreContainer;
+				var highScorePosX = highScorestyle.bound.x;
+				var highScorePosY = highScorestyle.bound.y;
+				var highScoreWidth = highScorestyle.bound.width;
+
+				
+				self.playListContainer.setLocation(playListPosX,playListPosY);
+				self.highScoreContainer.setLocation(highScorePosX,highScorePosY);
+				self.highScoreContainer.enableEvents(true);
+				self.playListContainer.enableEvents(true);
+				disable(true);
+				self.selectPlayList = true;
+				self.playListContainer.currentRecord = global.SELECTING_RECORD;
+				self.playListContainer.currentDifficulty = global.DIFFICULTY;
+				var path= new CAAT.PathUtil.LinearPath().
+					setInitialPosition(director.width,self.y).
+					setFinalPosition(self.playListContainer.x,self.playListContainer.y);
+				var pathBehavior= new CAAT.PathBehavior().setPath( path ).setFrameTime(self.time,369).
+				addListener({
+					behaviorExpired: function(director,time){
+						self.inAnimation = false;						
+					}
+				});
+				self.playListContainer.addBehavior(pathBehavior);
+				
+				var path2= new CAAT.PathUtil.LinearPath().
+					setInitialPosition(-self.highScoreContainer.width,self.y).
+					setFinalPosition(self.highScoreContainer.x,self.highScoreContainer.y);
+				var pathBehavior2= new CAAT.PathBehavior().setPath( path2 ).setFrameTime(self.time,369);
+				self.highScoreContainer.addBehavior(pathBehavior2);
+				
+			});			
+			this.playListButton = playListButton;
+			this.addChild(playListButton);
+			main.playListButton=playListButton;
+
+			//SHARE
+			var sharestyle= PianoicStyle.menuContainer.child.shareButton;
+			var shareButton = new CAAT.Button();
+			var arr_buttonImage=setPianoicStyle(director,shareButton,sharestyle);
+			var shareImage =arr_buttonImage[0];			
+
+			shareButton.initialize(director,shareImage,0,1,2,0,function(){	
+				global.JUST_LOAD_A_SONG = false;
+				if(self.inAnimation) return;
+				if(global.PLAYING_RECORD&&(!global.PAUSING_RECORD)) self.playButton.fn();
+				else if(global.countingDown) self.stopButton.fn();
+				self.inAnimation = true;
+				disable(true);
+				
+				var sharestyle=PianoicStyle.shareContainer;
+				var sharePosX = sharestyle.bound.x;
+				var sharePosY = sharestyle.bound.y;
+
+				self.shareContainer.setLocation(sharePosX,sharePosY);
+				self.shareContainer.enableEvents(true);
+				var path= new CAAT.PathUtil.LinearPath().
+					setInitialPosition(director.width,self.y).
+					setFinalPosition(self.shareContainer.x,self.shareContainer.y);
+				var pathBehavior= new CAAT.PathBehavior().setPath( path ).setFrameTime(self.time,369).
+				addListener({
+					behaviorExpired: function(director,time){
+						self.inAnimation = false;
+					}
+				});
+				self.shareContainer.addBehavior(pathBehavior);
+
+				
+				// var musicName=musicList[global.SELECTING_RECORD].Name;
+				// var EName=UnSign(musicName);
+				// var arr_name=EName.split(" ");
+				// var completeName="";
+				// for (var x=0;x<arr_name.length;x++)
+				// 	completeName+=arr_name[x];
+				// var text="http://pianoic.com/#/"+0+"-"+global.SELECTING_RECORD+"-"+global.DIFFICULTY+"/"+completeName;
+				// var linkshare="https://www.facebook.com/sharer/sharer.php?u=http://pianoic.com";
+				// //var dv=document.getElementById('basic-modal-content');
+				// //dv.innerHTML='<h3>'+LANG.popup.popuplinkshare+'</h3>\n <p>'+LANG.popup.copylink+'</p>\n <p id="code"><code>'+text+' </p>\n<p><input type="checkbox" name="vehicle" value="play" id="check">'+LANG.popup.isplay+'</p>\n<p><a href='+linkshare+' target="_blank"><img src="img/facebook.png" alt height="20">'+LANG.popup.share+'</a></p>';		
+			 // 	$('#basic-modal-content').modal({autoResize :true,appendTo:'#frame',overlayClose :true,focus:false,onShow:function(){shareButton._show=true},_onClose:function(){shareButton._show=false}});
+			 // 	document.getElementById('basic-modal-content').innerHTML='<h3 id="popuplinkshare"></h3>\n<p id="copylink">Examples:</p>\n<p><code id="code"></code></p>\n<p><input type="checkbox" name="vehicle" value="play" id="check"><span id="checkboxtxt"></span></input></p>\n<p><a href="https://www.facebook.com/sharer/sharer.php?u=http://pianoic.com" target="_blank"><img src="img/facebook.png" alt height="20"><span id="share"></span></a></p>';
+			 // 	document.getElementById('popuplinkshare').innerHTML=LANG.popup.popuplinkshare[global.LANGUAGE];
+			 // 	document.getElementById('copylink').innerHTML=LANG.popup.copylink[global.LANGUAGE];		 	
+			 // 	document.getElementById('code').innerHTML=text;
+			 // 	document.getElementById('checkboxtxt').innerHTML=" "+LANG.popup.isplay[global.LANGUAGE];
+			 // 	document.getElementById('share').innerHTML=" "+LANG.popup.share[global.LANGUAGE];
+			 	
+				
+			 // 	var checkbox=document.getElementById('check');
+			 // 	checkbox.onchange=function(e){
+			 // 		if (checkbox.checked) text="http://pianoic.com/#/"+1+"-"+global.SELECTING_RECORD+"-"+global.DIFFICULTY+"/"+completeName;
+			 // 			else text="http://pianoic.com/#/"+0+"-"+global.SELECTING_RECORD+"-"+global.DIFFICULTY+"/"+completeName;
+	 		// 		document.getElementById('code').innerHTML=''+text;
+	 		// 		selectText('code');
+			 // 	}
+			 	
+			 // 	eventPause(true);
+			 // 	selectText('code');
+			});
+			shareButton._show=false;
+			self.shareButton = shareButton;
+			self.addChild(shareButton);
+			main.shareButton=shareButton;
+
+
+			//SETTING
+			var settingstyle= PianoicStyle.menuContainer.child.settingButton;
+			var settingButton = new CAAT.Button();
+			var arr_buttonImage=setPianoicStyle(director,settingButton,settingstyle);
+			var settingImage =arr_buttonImage[0];
+
+			settingButton.initialize(director,settingImage,0,1,2,0,
+			function(){
+				global.JUST_LOAD_A_SONG = false;
+				if(self.inAnimation) return;
+				if(global.PLAYING_RECORD&&(!global.PAUSING_RECORD)) self.playButton.fn();
+				else if(global.countingDown) self.stopButton.fn();
+				self.inAnimation = true;
+				disable(true);
+				self.selectSetting=true;
+				var settingstyle=PianoicStyle.settingContainer;
+				var settingPosX = settingstyle.bound.x;
+				var settingPosY = settingstyle.bound.y;
+				//var settingWidth = settingstyle.bound.width;
+				var chooseSettingstyle=PianoicStyle.chooseSetting;
+				var chooseSettingPosX = chooseSettingstyle.bound.x;
+				var chooseSettingPosY = chooseSettingstyle.bound.y;
+				// var chooseSettingWidth = chooseSettingstyle.bound.width;
+
+				self.settingContainer.setLocation(settingPosX,settingPosY);
+				self.chooseSetting.setLocation(chooseSettingPosX,chooseSettingPosY);
+				self.chooseSetting.enableEvents(true);
+				self.settingContainer.enableEvents(true);
+				var path= new CAAT.PathUtil.LinearPath().
+					setInitialPosition(director.width,self.y).
+					setFinalPosition(self.settingContainer.x,self.settingContainer.y);
+				var pathBehavior= new CAAT.PathBehavior().setPath( path ).setFrameTime(self.time,369).
+				addListener({
+					behaviorExpired: function(director,time){
+						self.inAnimation = false;
+					}
+				});
+				self.settingContainer.addBehavior(pathBehavior);
+
+				var path2= new CAAT.PathUtil.LinearPath().
+					setInitialPosition(-self.chooseSetting.width,self.y).
+					setFinalPosition(self.chooseSetting.x,self.chooseSetting.y);
+				var pathBehavior2= new CAAT.PathBehavior().setPath( path2 ).setFrameTime(self.time,369);
+				self.chooseSetting.addBehavior(pathBehavior2);
+
+			});
+			this.settingButton = settingButton;
+			this.addChild(settingButton);
+			main.settingButton=settingButton;
+			
+		
+			
+
+			//FULL SCREEN
+			var fullscreenstyle= PianoicStyle.menuContainer.child.fullscreenButton;
+			var fullscreenButton = new CAAT.Button();
+			var arr_buttonImage=setPianoicStyle(director,fullscreenButton,fullscreenstyle);
+			var fullscreenImage =arr_buttonImage[0];
+			fullscreenButton.initialize(director,fullscreenImage,0,1,2,0,function(){	
+				var element=document.getElementById('frame');
+				var _isFullscreen=document.fullscreenElement || document.mozFullscreenElement || document.webkitFullscreenElement ? true : false;
+				if (!_isFullscreen)  {
+				  if(element.requestFullscreen) {
+				    element.requestFullscreen();
+				  } else if(element.mozRequestFullScreen) {
+				    element.mozRequestFullScreen();
+				  } else if(element.webkitRequestFullscreen) {
+				  	element.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+				    element.webkitRequestFullscreen();
+				  } else if(element.msRequestFullscreen) {
+				    element.msRequestFullscreen();
+				  }
+				  director.setScaleProportional2(window.screen.width, window.screen.height);
+				} else {
+				  if(document.exitFullscreen) {
+				    document.exitFullscreen();
+				  } else if(document.mozCancelFullScreen) {
+				    document.mozCancelFullScreen();
+				  } else if(document.webkitExitFullscreen) {
+				    document.webkitExitFullscreen();
+				  }
+				}
+			});
+			self.fullscreenButton = fullscreenButton;
+			self.addChild(fullscreenButton);
+			main.fullscreenButton=fullscreenButton;
+
+			//BG ShowKey
+			var bgshowkey= PianoicStyle.menuContainer.child.bgshowkeyActor;
+			var bgshowkeyActor = new CAAT.Foundation.Actor();
+			setPianoicStyle(director,bgshowkeyActor,bgshowkey);
+			this.addChild(bgshowkeyActor);
+			main.bgshowkeyActor=bgshowkeyActor;
+			bgshowkeyActor.cacheAsBitmap(this.time,CAAT.Foundation.Actor.CACHE_DEEP);
+			
+
+			var disabletyle= PianoicStyle.menuContainer.child.disableActor;
+			var disableActor = new CAAT.Foundation.Actor();
+			setPianoicStyle(director,disableActor,disabletyle);
+			this.addChild(disableActor);
+			var disable=function(on){
+				disableActor.enableEvents(on);
+				disableActor.setVisible(on);
+			}
+			main.disableActor=disableActor;
+			this.disable=disable;
+			disableActor.cacheAsBitmap(this.time,CAAT.Foundation.Actor.CACHE_DEEP);
+
+			
+			
+			
+			
+			//Sort Actor
+			var zindexSort=function(){
+				for (x in PianoicStyle.menuContainer.child){
+					if(PianoicStyle.menuContainer.child[x].zindex)
+					this.setZOrder(main[x],PianoicStyle.menuContainer.child[x].zindex);
+				}
+			}
+			zindexSort();
+            return this;
+        },
+		closeBehavior:function(type){
+			switch(type){
+				case -1:
+					this.settingContainer.closeBehavior(type);
+					this.chooseSetting.closeBehavior(type);
+					break;
+				case 1,2:
+					this.playListContainer.closeBehavior(type);
+					this.highScoreContainer.closeBehavior(type);
+					break;
+				case 3:
+					this.shareContainer.closeBehavior(type);
+					break;
+				default:
+					this.settingContainer.closeBehavior(type);
+					this.chooseSetting.closeBehavior(type);
+					this.playListContainer.closeBehavior(type);
+					this.highScoreContainer.closeBehavior(type);
+					this.shareContainer.closeBehavior(type);
+					break;
+
+			}
+			
+			this.disable(false);
+		}
+    }
+    function selectText(element) {
+			    var doc = document
+			        , text = doc.getElementById(element)
+			        , range, selection;    
+			    if (doc.body.createTextRange) { //ms
+			        range = doc.body.createTextRange();
+			        range.moveToElementText(text);
+			        range.select();
+			    } else if (window.getSelection) { //all others
+			        selection = window.getSelection();        
+			        range = doc.createRange();
+			        range.selectNodeContents(text);
+			        selection.removeAllRanges();
+			        selection.addRange(range);
+			    }
+			}
+    function stringToRecordData(str){
+			var outputData = [];
+			if(str.length==0) return outputData;
+			var stringArray = str.split(",");
+			//console.log(stringArray.length);
+			for(var i=0;i<stringArray.length;i++){
+				var temp = stringArray[i].split(" ");
+				if(temp[0].charCodeAt(0)>57){
+					for(var j=0;j<keyData.length;j++){
+						if(temp[0] === keyData[j].name){
+							temp[0] = j;
+							break;
+						}
+					}
+				}
+				outputData.push({keyIndex:temp[0]<<0,time:temp[1]<<0});
+			}
+			return outputData;
+		}
+    extend(CAAT.MenuContainer, CAAT.Foundation.ActorContainer);
+})();
+
+(function () {
+    CAAT.KeyBoardContainer = function () {
+        CAAT.KeyBoardContainer.superclass.constructor.call(this);
+        return this;
+    }
+
+    CAAT.KeyBoardContainer.prototype = {
+        initialize: function (director,keys,imgs) {
+            this.director = director;
+			this.keys = keys;
+			this.imgs = [];
+			for (var i=0;i<imgs.length;i++)
+			this.imgs.push(director.getImage(imgs[i]));
+            return this;
+        },
+        paint: function (director,time) {
+			CAAT.KeyBoardContainer.superclass.paint.call(this, director, time);
+            var ctx = director.ctx;
+			if(!this.painted){
+				this.painted = true;
+				this.startTime = time;
+			}
+			if(time<this.startTime+1){
+				//console.log(director.getImage('key-black'))
+				//var img=director.getImage(this.imgs[0]);
+				length=this.keys.length;
+				for(var i=0;i<length;i++) {
+					var key = this.keys[i];
+					var width = key.width;
+					var height = key.height;
+					var x = key.x-this.x;
+					var y = 0;
+					if ((key.type == "black")||(i!=0&&i!=length-1))
+						ctx.drawImage(this.imgs[0],x,  y,width,height);
+					else {
+						i==0?ctx.drawImage(this.imgs[1],x,  y,width,height):ctx.drawImage(this.imgs[2],x,  y,width,height);;
+					}
+					/*ctx.fillStyle = (key.type == "white")?"#FFF":"#000";
+					ctx.strokeStyle = "#000";
+					var radius = 5;
+					ctx.beginPath();
+					ctx.moveTo(radius+x,  y);
+					ctx.lineTo(width - radius+x, y);
+					ctx.quadraticCurveTo(width+x, y, width+x, radius+y);
+					ctx.lineTo(width+x, height - radius+y);
+					ctx.quadraticCurveTo(width+x , height+y, width - radius+x, height+y);
+					ctx.lineTo(radius+x, height+y);
+					ctx.quadraticCurveTo(x, height+y, x, height - radius+y);
+					ctx.lineTo(x, radius+y);
+					ctx.quadraticCurveTo(x, y, radius+x, y);
+					
+					ctx.closePath();
+					ctx.fill();
+					ctx.stroke();
+					ctx.fillStyle = (key.type == "black")?"#FFF":"#000";*/
+					var keyString = String.fromCharCode(keyData[key.keyIndex].keyCode[0]);
+					if(!key.isShift) keyString = keyString.toLowerCase();
+
+					ctx.font = PianoicStyle.keyBoardActor.text.font;
+					if(this.director.globalVariables.SHOW_KEYBOARD_TEXT) ctx.fillText(keyString,x + width/2 - ctx.measureText(keyString).width/2,y+height-20);
+				}
+			}
+			else if(!this.cached){
+				this.cached = true;
+				this.cacheAsBitmap(this.startTime,CAAT.Foundation.Actor.CACHE_DEEP);
+			}
+            return this;
+        },
+		repaint: function(){
+			this.painted  = false;
+			this.stopCacheAsBitmap();
+		}
+    }
+    extend(CAAT.KeyBoardContainer, CAAT.Foundation.ActorContainer);
+})();
+(function () {
+	CAAT.PianoKey = function () {
+        CAAT.PianoKey.superclass.constructor.call(this);
+        return this;
+    }
+    CAAT.PianoKey.prototype = {
+	initialize : function (director,keyBoardActor, posX, posY, type, keyIndex,img,playbackBoard) {
+		this.director = director;
+		this.keyBoardActor = keyBoardActor;
+		this.x = posX;
+		this.y = posY;
+		width=this.width;
+		height=this.height;
+		this.keyIndex = keyIndex;
+		this.hitting = false;
+		this.type = type;
+		// var shadowGradient= director.ctx.createLinearGradient(0,0,0,64);
+		// shadowGradient.addColorStop(0,"#ffffff");
+		// //shadowGradient.addColorStop(0.5,"#00ff0f");
+		// shadowGradient.addColorStop(1,"#43601e");
+		// this.shadow = new CAAT.ActorContainer().
+		// 	setBounds(posX,posY,width,height).
+		// 	setFillStyle(type=="white"?shadowGradient:"#555").
+		// 	setAlpha(0).
+		// 	enableEvents(false).setVisible(false);
+		this.shadow = new CAAT.ActorContainer().setBackgroundImage(img).setBounds(posX,posY,width,height).setAlpha(0).enableEvents(false).setVisible(false);
+		var hitkeygreenstyle=PianoicStyle.playbackBoard.child.hitkeygreen;
+		this.hitkeygreen = new CAAT.Foundation.ActorContainer();
+		var img=setPianoicStyle(director,this.hitkeygreen,hitkeygreenstyle);
+		this.hitkeygreen.setLocation(posX,playbackBoard.height-img[0].height).
+		//this.hitkeygreen.setLocation(posX,posY-img[0].height).
+			enableEvents(false).setVisible(false);
+		keyBoardActor.addChild(this.shadow);
+		playbackBoard.addChild(this.hitkeygreen);
+		
+		return this;
+	},
+	score: function(time){
+		var self = this;
+		var alphaBehavior = new CAAT.Behavior.AlphaBehavior().setValues(1, 0).setDelayTime(0, 1000).setCycle(false).
+			addListener({
+				behaviorExpired: function(director, time) {
+					self.hitkeygreen.setVisible(false);
+					self.hitkeygreen.emptyBehaviorList();
+				}
+			});
+		this.hitkeygreen.addBehavior(alphaBehavior);
+		this.hitkeygreen.setVisible(true);
+		return this;
+	},
+	hit : function(){
+			var self = this;
+			if(this.hitting){
+				this.shadow.emptyBehaviorList();
+			}
+			this.hitting = true;
+			var alphaBehavior = new CAAT.Behavior.AlphaBehavior().setValues(1, 0).setDelayTime(0, 1000).setCycle(false).
+			addListener({
+				behaviorExpired: function(director, time) {
+					self.shadow.setVisible(false);
+					self.shadow.emptyBehaviorList();
+				}
+			});
+			this.shadow.addBehavior(alphaBehavior);
+			this.shadow.setVisible(true);
+			return this;
+		}
+	}
+	extend(CAAT.PianoKey, CAAT.Foundation.ActorContainer);
+
+})();
+(function () {
+	CAAT.ShareContainer = function () {
+        CAAT.ShareContainer.superclass.constructor.call(this);
+        return this;
+    }
+    CAAT.ShareContainer.prototype = {
+		initialize : function (menuContainer) {
+			var self=this;
+			this.director = menuContainer.director;
+			this.menuContainer=menuContainer;
+			var global=this.director.globalVariables;
+			
+
+			var songlinkstyle=PianoicStyle.shareContainer.child.songlink;			
+			var songlink = new CAAT.Foundation.ActorContainer();
+			var imgs=setPianoicStyle(self.director,songlink,songlinkstyle);
+			var img1=this.director.getImage(imgs);
+			var text1=LANG.popup.copylink[global.LANGUAGE];
+			var startTime;
+			var t=songlink.time;
+			songlink.paint=function(director,time){
+				if(!this.painted){
+				this.painted = true;
+				this.startTime = time;
+				}
+				if(time<this.startTime+1){
+				var ctx=director.ctx;
+				ctx.fillStyle=songlinkstyle.bgcolor;
+				ctx.fillRect(0,0,this.width,this.height);
+				ctx.drawImage(img1,30,songlink.height/2-img1.height/2,img1.width,img1.height);
+				ctx.fillStyle=songlinkstyle.text.fontcolor;
+				ctx.font=songlinkstyle.text.font;
+				ctx.fillText(text1,songlinkstyle.text.posX,songlinkstyle.text.posY);
+				console.log(t);
+				}
+				else if(!this.cached){
+				this.cached = true;
+				this.cacheAsBitmap(this.startTime,CAAT.Foundation.Actor.CACHE_DEEP);
+			}
+				
+				
+			
+			}
+			
+
+			// var iconShare=new CAAT.Foundation.Actor().
+			// 				setBackgroundImage(img1[0]).
+			// 				setLocation(30,songlink.height/2-img1[0].height/2);
+			// songlink.addChild(iconShare);
+			this.addChild(songlink);
+			this.songlink=songlink;
+
+
+			var sharegamestyle=PianoicStyle.shareContainer.child.sharegame;			
+			var sharegame = new CAAT.Foundation.ActorContainer();
+			var img2=setPianoicStyle(self.director,sharegame,sharegamestyle);
+			
+			var iconFB=new CAAT.Foundation.Actor().
+							setBackgroundImage(img2[0]).
+							setLocation(30,songlink.height/2-img2[0].height/2);
+			sharegame.addChild(iconFB);
+			this.addChild(sharegame);
+			this.sharegame=sharegame;
+
+
+			var offButtonstyle=PianoicStyle.shareContainer.child.offButtonPosition;
+			var offButtonPosition = new CAAT.Foundation.Actor();
+			var arr_offbutton=setPianoicStyle(self.director,offButtonPosition,offButtonstyle);
+			offButtonPosition.setBackgroundImage(arr_offbutton[0]);
+			offButtonPosition.mouseEnter = function(){
+				offButtonPosition.setBackgroundImage(arr_offbutton[1]);
+			}
+			offButtonPosition.mouseExit = function(){
+				offButtonPosition.setBackgroundImage(arr_offbutton[0]);
+			}
+			offButtonPosition.mouseDown = function(){				
+				menuContainer.closeBehavior(3);			
+			}
+			this.addChild(offButtonPosition);
+			this.offButtonPosition = offButtonPosition;
+			return this;
+		},
+		setLink: function(link){
+			return this;
+		},
+		closeBehavior: function(){
+			var self = this;
+			var path= new CAAT.PathUtil.LinearPath().
+				setInitialPosition(this.x,this.y).
+				setFinalPosition(this.director.width,0);
+			self.menuContainer.inAnimation = true;
+			var pathBehavior= new CAAT.PathBehavior().setPath(path).setFrameTime(self.time,369).
+			addListener({
+				behaviorExpired: function(director,time){
+					self.emptyBehaviorList();
+					self.menuContainer.inAnimation = false;
+				}
+			});
+			self.addBehavior(pathBehavior);
+		}
+	}
+	extend(CAAT.ShareContainer, CAAT.Foundation.ActorContainer);
+
+})();

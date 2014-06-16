@@ -1,0 +1,28 @@
+{
+  "name": "112",
+  "version": "0.0.1",
+  "description": "BKGM",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^3.4.8",
+    "logfmt": "^1.1.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BKGM/112.git"
+  },
+  "keywords": [
+    "dota",
+    "lol"
+  ],
+  "author": "BKGM",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BKGM/112/issues"
+  },
+  "homepage": "https://github.com/BKGM/112"
+}

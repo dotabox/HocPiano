@@ -52,6 +52,7 @@
 	 <script src="./inc/Base64.js" type="text/javascript"></script>
 	 <script src="./inc/base64binary.js" type="text/javascript"></script>
 	<script type="text/javascript" charset="utf-8" src = "js/bkgm.js"></script>
+	<script type="text/javascript" charset="utf-8" src = "js/sounddata.js"></script>
 	<script type="text/javascript" charset="utf-8" src = "js/data.js"></script>
 	<script type="text/javascript" charset="utf-8" src = "js/actor.js"></script>
 	<script type="text/javascript" charset="utf-8" src = "js/pianokey.js"></script>
@@ -172,6 +173,17 @@
 
 	if(navigator.appName=='Microsoft Internet Explorer'){ document.onfocusin=onFocusIE; document.onfocusout=onBlurIE;}
 	else{ window.onfocus=connectMidiIn; window.onblur=disconnectMidiIn;}
+	function onMIDIMessage( event ) {
+	  var str = "MIDI message received at timestamp " + event.timestamp + "[" + event.data.length + " bytes]: ";
+	  for (var i=0; i<event.data.length; i++) {
+	    str += "0x" + event.data[i].toString(16) + " ";
+	  }
+	  midiProc(event.timestamp,event.data[0],event.data[1],event.data[2])
+	}
+
+function startLoggingMIDIInput( midiAccess, indexOfPort ) {
+  midiAccess.inputs.entries[indexOfPort].onmidimessage = onMIDIMessage;
+}
 	--></script>
 </body>
 </html>

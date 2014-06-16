@@ -445,6 +445,7 @@ var BKGM = BKGM||{};
                 close:function(){
                     ok();
                     if(fadeOut) box.fadeOut(function(){self._alertBox=null;});
+                    else self._alertBox=null;
                 }
             });
             // if(fadeIn) box.fadeIn();
@@ -973,23 +974,37 @@ var BKGM = BKGM||{};
             // processData:obj.processData ? obj.processData : false,
             // contentType:obj.contentType ? obj.contentType :false,
             // cache: obj.cache ? obj.cache : true,
+            responseType :obj.responseType ? obj.responseType  :null,
             success: obj.success ? obj.success : null,
             error: obj.error ? obj.error : null,
-            complete: obj.complete ? obj.complete : null
+            complete: obj.complete ? obj.complete : null,
+            j: obj.j ? obj.j : 0
         }
         
         var xhr = new XMLHttpRequest();
         // xhr.upload.addEventListener('progress',function(ev){
         //     console.log((ev.loaded/ev.total)+'%');
         // }, false);
+        xhr.responseType=ajax.responseType;
         xhr.onreadystatechange = function(ev){
-            if (xhr.status==200) {
-                if(ajax.success) ajax.success(xhr.responseText);
-                if (xhr.readyState==4)
-                    if (ajax.complete) ajax.complete(xhr.responseText,xhr.responseXML)            
+            if (ajax.responseType!='blob'){
+                if (xhr.status==200) {
+                    if(ajax.success) ajax.success(xhr.responseText);
+                    if (xhr.readyState==4)
+                        if (ajax.complete) ajax.complete(xhr.responseText,ajax.j)            
+                } else {
+                    if (ajax.error) ajax.error(xhr.responseText);
+                }  
             } else {
-                if (ajax.error) ajax.error(xhr.responseText);
-            }            
+                if (xhr.status==200) {
+                    if(ajax.success) ajax.success(xhr.response);
+                    if (xhr.readyState==4)
+                        if (ajax.complete) ajax.complete(xhr.response,ajax.j)            
+                } else {
+                    if (ajax.error) ajax.error(xhr.response);
+                } 
+            }
+                      
         };
         xhr.open(ajax.type, ajax.url, true);
         xhr.send(ajax.data);

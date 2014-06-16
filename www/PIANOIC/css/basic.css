@@ -1,0 +1,56 @@
+/*
+ * SimpleModal Basic Modal Dialog
+ * http://simplemodal.com
+ *
+ * Copyright (c) 2013 Eric Martin - http://ericmmartin.com
+ *
+ * Licensed under the MIT license:
+ *   http://www.opensource.org/licenses/mit-license.php
+ */
+ .hidden {
+	 visibility:hidden;
+	 width:0px;
+	 height:0px;
+	 margin:0px;
+	 padding:0px;
+	 border-style:none;
+	 border-width:0px;
+	 max-width:0px;
+	 max-height:0px;
+	}
+	#msg {
+	 width:20em;
+	 height:24em;
+	 margin:.5em 0 .5em 0;
+	 padding:.5em;
+	 background-color:#eee;
+	 border:solid 1px #888;
+	 white-space:pre;
+	 font-family:Courier New, monospace;
+	 font-size:.75em;
+	 overflow:auto;
+	}
+ .wf-loading p { font-family: sans-serif; }
+.wf-inactive p { font-family: sans-serif; }
+.wf-active p { font-family: 'Alegreya', sans-serif; width:400px; margin-left:20px; }
+.wf-loading h1 { font-family: sans-serif; font-weight: 400; font-size: 24px; }
+.wf-inactive h1 { font-family: sans-serif; font-weight: 400; font-size: 24px; }
+.wf-active h1 { font-family: 'Aclonica', sans-serif; font-weight: 400; font-size: 24px; }
+.wf-loading h2 { font-family: sans-serif; font-weight: 300; font-size: 20px; color:#5E5E5E; }
+.wf-inactive h2 { font-family: sans-serif; font-weight: 300; font-size: 20px; color:#5E5E5E; }
+.wf-active h2 { font-family: 'Acme', sans-serif; font-weight: 300; font-size: 20px; color:#5E5E5E; }
+body {height:100%; margin:0 auto; width:100%;}
+#basic-modal-content {display:none;}
+
+/* Overlay */
+#simplemodal-overlay {background-color:#000;}
+
+/* Container */
+#simplemodal-container {height:250px; width:600px; color:#bbb; background-color:#333; border:4px solid #444; padding:12px;}
+#simplemodal-container .simplemodal-data {padding:8px;}
+#simplemodal-container code {background:#fff; border-left:3px solid #65B43D; color:#000; display:block; font-size:12px; margin-bottom:12px; padding:4px 6px 6px;}
+#simplemodal-container textarea {resize: none;}
+#simplemodal-container a {color:#ddd;}
+#simplemodal-container a.modalCloseImg {background:url(../img/basic/x.png) no-repeat; width:25px; height:29px; display:inline; z-index:3200; position:absolute; top:-15px; right:-16px; cursor:pointer;}
+#simplemodal-container h3 {color:#84b8d9;}
+#controls{  bottom: 0;  left: 0;  position: absolute;  width: 100%;}

@@ -53,6 +53,7 @@
 					   .load("image","cardnote.white","img/cardnote/cardnote-white.png")
 					   .load("image","cardnote.black","img/cardnote/cardnote-black.png")
 					   .load("image","bg","img/pic-background.png")
+					   .load("image","back","img/back.png")
 					   ;
 				preload.onloadAll= function(){
 					if(_oneLoad) windowLoad(preload);
@@ -104,8 +105,57 @@
 
             var director;
             var _fb;
-            BKGM.debug=1;
-            
+            // BKGM.debug=1;
+            for (var i = MusicData.length - 1; i >= 0; i--) {
+            	var msdata=MusicData[i];
+            	var lesson=msdata.lesson;
+            	for (var j = msdata.learn.length - 1; j >= 0; j--) {            		
+            		BKGM.ajax({url:"data/"+msdata.learn[j],type:"GET",data:"",responseType :"blob",j:j,
+		            	complete:function(ev,num){
+		            		var num=num+1;
+		            		var blob = new Blob([ev], {type: 'audio/mid'});
+		            		var reader = new FileReader();
+						  	reader.onload = function (event) {
+
+						  		var str=event.target.result;						  		
+								var lvl="level"+lesson+".b"+num;
+								BKGM.MIDIDATA[lvl]=str;
+						  	}
+
+						  	reader.readAsDataURL(blob);
+		            	}})
+            	};
+            	for (var g = msdata.learn_hand.length - 1; g >= 0; g--) {            		
+            		BKGM.ajax({url:"data/"+msdata.learn_hand[g],type:"GET",data:"",
+		            	complete:function(ev){
+		            		eval(ev)
+		            	}})
+            	};
+            	for (var j = msdata.play.length - 1; j >= 0; j--) {            		
+            		BKGM.ajax({url:"data/"+msdata.play[j],type:"GET",data:"",responseType :"blob",j:j,
+		            	complete:function(ev,num){
+		            		var num=num+1;
+		            		var blob = new Blob([ev], {type: 'audio/mid'});
+		            		var reader = new FileReader();
+						  	reader.onload = function (event) {
+
+						  		var str=event.target.result;						  		
+								var lvl="level"+lesson+".play"+num;
+								BKGM.MIDIDATA[lvl]=str;
+						  	}
+
+						  	reader.readAsDataURL(blob);
+		            	}})
+            	};
+            	for (var g = msdata.play_hand.length - 1; g >= 0; g--) {            		
+            		BKGM.ajax({url:"data/"+msdata.play_hand[g],type:"GET",data:"",
+		            	complete:function(ev){
+		            		eval(ev)
+		            	}})
+            	};
+            	
+            };
+
             var Game = new BKGM({
 			    setup: function(){
 			        director = new BKGM.States();
@@ -285,14 +335,32 @@
 				    director.task("background", function(){
 				        Game.background(16, 16, 16, 1);
 				    }, true);
-
-				    
+				    // var pianoic;
+				    var globalBack={
+				    	image:Gimages.back,
+				    	x:0,
+				    	y:0,
+				    	w:100,
+				    	h:100,
+				    	action:function(){
+				    		if(Intro) Intro.close();
+				    		switch (director.current){
+				    			case "menu":director.switch("ready",true);break;
+				    			case "level1.start":director.switch("menu",true);break;
+				    			case "level1.learn":director.switch("level1.start",true);break;
+				    			case "level1.play":director.switch("level1.start",true);break;
+				    		}
+				    		
+				    			
+				    	}
+				    }
 				    director.taskOnce("setup0", function(){				    	
 				        Game.font='UTM Avo';
 				        var Intro=new BKGM.Intro(Game);
 				        // Game.intro=Intro;
 				        // Game.intro.open();
 				        Intro.open();
+				        // pianoic=new BKGM.Intro(Game,'PIANOIC/index.html',0,0,Game.WIDTH,Game.HEIGHT,1);
 				    });
 				    
 				    var chooseHoc={
@@ -327,7 +395,52 @@
             			var text2="Chơi game PIANOIC";
             			ctx.fillText(text2, Game.WIDTH/2-ctx.measureText(text2).width/2, chooseChoi.y+10+chooseChoi.h/2);
 				    }, true);
-				    
+
+				    var trinhdo1={
+				    	image:Gimages.whitebutton,
+				    	x:Game.WIDTH*1/3,
+				    	y:Game.WIDTH/7,
+				    	w:Game.WIDTH/3,
+				    	h:Game.HEIGHT/3-Game.HEIGHT/5,
+				    	action:function(){
+				    		Game.level1={};
+							Game.level1.load=true;
+							Game.level1.fullData={};
+							Game.level1.b=1;
+							Game.level1.p=1;
+							Game.lvl='level1';
+							Game.lvlmax=4;
+							Game.lvlpmax=2;
+							td1=true;
+				    	}
+				    }
+				    var trinhdo2={
+				    	image:Gimages.whitebutton,
+				    	x:Game.WIDTH*1/3,
+				    	y:Game.HEIGHT*3/5-50,
+				    	w:Game.WIDTH/3,
+				    	h:Game.HEIGHT/3-Game.HEIGHT/5,
+				    	action:function(){
+				    		Game.level2={};
+							Game.level2.load=true;
+							Game.level2.fullData={};
+							Game.level2.b=1;
+							Game.level2.p=1;
+							Game.lvl='level2';
+							Game.lvlmax=2;
+							Game.lvlpmax=2;
+							td1=false;
+				    	}
+				    }
+				    var trinhdo3={
+				    	image:Gimages.whitebutton,
+				    	x:Game.WIDTH*1/3,
+				    	y:Game.HEIGHT*3/5+100,
+				    	w:Game.WIDTH/3,
+				    	h:Game.HEIGHT/3-Game.HEIGHT/5
+				    }
+				    var trinhdo=[trinhdo1,trinhdo2];
+
 				    director.task("chooselevel", function(){
 				   		// Fill màu trắng để vẽ tiêu đề
 				        Game.fill(222,222,222,1);
@@ -336,31 +449,26 @@
             			ctx.fillText(text0, Game.WIDTH/2-ctx.measureText(text0).width/2, 75);
             			// Fill màu đen để vẽ chữ            			
             			Game.fill(16,16,16,1);
-            			// Vẽ button image cho nút học
-            			ctx.drawImage(chooseHoc.image,chooseHoc.x,chooseHoc.y,chooseHoc.w,chooseHoc.h);
+            			ctx.drawImage(trinhdo1.image,trinhdo1.x,trinhdo1.y,trinhdo1.w,trinhdo1.h);
             			var text1="Trình độ 1";
             			ctx.font = 'bold '+ (30*Game.SCALE)+'px '+Game.font;
-            			ctx.fillText(text1, Game.WIDTH/2-ctx.measureText(text1).width/2, chooseHoc.y+10+chooseHoc.h/2);
-            			// Vẽ nút chơi
-            			ctx.drawImage(chooseChoi.image,chooseChoi.x,chooseChoi.y,chooseChoi.w,chooseChoi.h);
+            			ctx.fillText(text1, Game.WIDTH/2-ctx.measureText(text1).width/2, trinhdo1.y+10+trinhdo1.h/2);
+            			
+            			ctx.drawImage(trinhdo2.image,trinhdo2.x,trinhdo2.y,trinhdo2.w,trinhdo2.h);
             			var text2="Trình độ 2";
-            			ctx.fillText(text2, Game.WIDTH/2-ctx.measureText(text2).width/2, chooseChoi.y+10+chooseChoi.h/2);
+            			ctx.fillText(text2, Game.WIDTH/2-ctx.measureText(text2).width/2, trinhdo2.y+10+trinhdo2.h/2);
+            			ctx.drawImage(globalBack.image,globalBack.x,globalBack.y,globalBack.w,globalBack.h)
+            			// ctx.drawImage(trinhdo3.image,trinhdo3.x,trinhdo3.y,trinhdo3.w,trinhdo3.h);
+            			// var text2="Trình độ 3";
+            			// ctx.fillText(text2, Game.WIDTH/2-ctx.measureText(text2).width/2, trinhdo3.y+10+trinhdo3.h/2);
 				    }, true);
 					var scale = 0.7;
 					var khuongnhac={x:0,y:0,w:1,h:1};
 					var Intro=new BKGM.Intro(Game,'data/level1/lvl1.html',30,100,Game.WIDTH,100,1);
 					var nhacdem={};
-
+					var td1=true;
 					director.taskOnce("lvl1.setup.start", function(){
-						alert(lvlhientai)
-						Game.level1={};
-						Game.level1.load=false;
-						Game.level1.fullData={};
-						Game.level1.b=1;
-						Game.level1.p=1;
-						Game.lvl='level1';
-						Game.lvlmax=4;
-						Game.lvlpmax=2;
+						if(td1)
 				        Intro.open();
 				        scale=0.7;
 				        MIDI.Player.stop();
@@ -383,15 +491,15 @@
 				   		keyBoardActorBlack.x=keyBoardActorWhite.x=border._x+Gimages['woodbar.left'].width*scale;
 				   		keyBoardActorBlack.y=keyBoardActorWhite.y=border._y+Gimages['woodbar.top'].height*scale;
 				   		nhacdem.level1=[];
-						BKGM.loadJS("./data/level1/sound/sounddata.js",function(){
-							Game.level1.load=true;
-							for (var x in BKGM.MIDIDATA['level1.dem']){
-								var audio=new BKGM.Audio();
-								audio.setAudio("./data/level1/sound/"+BKGM.MIDIDATA['level1.dem'][x])
-								nhacdem.level1.push(audio);
-							}
+						// BKGM.loadJS("./data/level1/sound/sounddata.js",function(){
+						// 	Game.level2.load=true;
+						// 	for (var x in BKGM.MIDIDATA['level1.dem']){
+						// 		var audio=new BKGM.Audio();
+						// 		audio.setAudio("./data/level1/sound/"+BKGM.MIDIDATA['level1.dem'][x])
+						// 		nhacdem.level1.push(audio);
+						// 	}
 														
-						})
+						// })
 				    });
 					
 					director.task("lvl1.background", function(){
@@ -421,9 +529,11 @@
 
 				    director.task("lvl1.tut", function(){
 				    	Game.fill(16,16,16,1);
-				    	var text0="TRÌNH ĐỘ MỘT";
-				        ctx.font = 'bold '+ (30*Game.SCALE)+'px '+Game.font;
-            			ctx.fillText(text0, Game.WIDTH/2-ctx.measureText(text0).width/2, 75);
+				    	if(td1){
+				    		var text0="TRÌNH ĐỘ MỘT";
+					        ctx.font = 'bold '+ (30*Game.SCALE)+'px '+Game.font;
+	            			ctx.fillText(text0, Game.WIDTH/2-ctx.measureText(text0).width/2, 75);
+				    	}				    	
             			// ctx.font = 'bold '+ (20*Game.SCALE)+'px '+Game.font;
             			ctx.drawImage(Gimages['lvl1.sol'],khuongnhac.x,khuongnhac.y,khuongnhac.w,khuongnhac.h);
             			
@@ -437,6 +547,7 @@
             			var y=chooseLearn.y+chooseLearn.h/2+(25*Game.SCALE)/2;
             			ctx.fillText(text1, chooseLearn.x+width-ctx.measureText(text1).width/2, y);
             			ctx.fillText(text2, choosePlay.x+width-ctx.measureText(text2).width/2, y);
+
 				    }, true);
 
 				    // Khởi tạo phím startkey;
@@ -541,10 +652,11 @@
 				   		ctx.closePath();
 				   		ctx.drawImage(border,border._x,border._y);
 				   		Piano.draw(Game);
+				   		ctx.drawImage(globalBack.image,globalBack.x,globalBack.y,globalBack.w,globalBack.h)
 				   		// console.log(border.width,border.height)
 				    }, true);
 				    function initDataMIDI(){
-				    	console.log(BKGM.MIDIDATA[Game.lvl+".t"+Game[Game.lvl].b])
+				    	console.log(BKGM.MIDIDATA)
 				    	data=Game.lvl+".b"+Game[Game.lvl].b;
 				    	right=Game.lvl+".p"+Game[Game.lvl].b;
 				    	left=Game.lvl+".t"+Game[Game.lvl].b;
@@ -713,6 +825,7 @@
 				   		keyBoardActorBlack.x=keyBoardActorWhite.x=border._x+Gimages['woodbar.left'].width*scale;
 				   		keyBoardActorBlack.y=keyBoardActorWhite.y=border._y+Gimages['woodbar.top'].height*scale;
 				   		initDataMIDI();
+				   		if(Game._txt)
 				    	Game.alert({
 				    		text:Game._txt,
 				    		ok:function(){
@@ -723,9 +836,18 @@
 						   		
 						   		Game.lvl1count=true;
 						   		
+				    		},
+				    		exit:function(){
+				    			Game.count=4;
+						   		Metronome.toogleplay();					   		
+						   		Game.lvl1count=true;
 				    		}
 				    	})
-				   		
+				   		else {
+				   			Game.count=4;
+					   		Metronome.toogleplay();					   		
+					   		Game.lvl1count=true;
+				   		}
 				   	// 	MIDI.Player.loadFile(BKGM.MIDIDATA['level1.b1'], function(){
 				   	// 		Metronome.toogleplay();
 				  		// 	MIDI.Player.start();
@@ -876,7 +998,7 @@
 				  			// MIDI.Player.start();
 				  			
 				  		});
-				  		dem=nhacdem[Game.lvl][Game[Game.lvl].p-1];
+				  		// dem=nhacdem[Game.lvl][Game[Game.lvl].p-1];
 				  		
 				  		_callbackMIDI=function(note,velocity,unpressed,track){
 				  			if(!unpressed){
@@ -1253,24 +1375,32 @@
 				   					Game.canvas.style.cursor= "default";
 				   				}
 				   				if(BKGM.checkMouseBox(e,chooseChoi)){
-				   					alert("chua lam")
+				   					location.href="/PIANOIC/"
 				   				}
 				   				break;
 			   				case "menu":
-			   					if(BKGM.checkMouseBox(e,chooseHoc)){
-			   						lvlhientai=1;
-				   					director.switch('level1.start');
-				   					Game.canvas.style.cursor= "default";
-				   				}
-				   				if(BKGM.checkMouseBox(e,chooseChoi)){
-				   					lvlhientai=2;
-				   					director.switch('level1.start');
-				   					Game.canvas.style.cursor= "default";
-				   				}
+			   					for (var i in trinhdo) {
+		   							if(BKGM.checkMouseBox(e,trinhdo[i])){
+		   								trinhdo[i].action();
+		   								director.switch('level1.start');
+		   							}
+		   						};
+			   					// if(BKGM.checkMouseBox(e,chooseHoc)){
+			   					// 	lvlhientai=1;
+				   				// 	director.switch('level1.start');
+				   				// 	Game.canvas.style.cursor= "default";
+				   				// }
+				   				// if(BKGM.checkMouseBox(e,chooseChoi)){
+				   				// 	lvlhientai=2;
+				   				// 	director.switch('level1.start');
+				   				// 	Game.canvas.style.cursor= "default";
+				   				// }
 			   					break;
 			   				case "level1.start":
+			   				// console.log(111)
 			   					_checkKeyPiano(e);
-			   					if(Game.level1.load)
+
+			   					if(Game[Game.lvl].load)
 			   					if(BKGM.checkMouseBox(e,chooseLearn)){
 		   								chooseLearn.action();
 	   							} else
@@ -1295,7 +1425,9 @@
 		   						};
 
 				   		}
-				   		
+				   		if(BKGM.checkMouseBox(e,globalBack)){
+				   			globalBack.action();
+				   		}
 				   	}
 				   	// Khi bỏ chuột
 				   	Game.mouseUp=function(e){
